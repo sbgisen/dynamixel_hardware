@@ -45,8 +45,8 @@ struct Joint
   JointValue state{};
   JointValue command{};
   JointValue prev_command{};
+  double mechanical_reduction{1.0};
   double rising_offset{0.0};
-  double gear_ratio{1.0};
 };
 
 enum class ControlMode

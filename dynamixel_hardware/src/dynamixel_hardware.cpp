@@ -85,6 +85,9 @@ CallbackReturn DynamixelHardware::on_init(const hardware_interface::HardwareInfo
     }
     if (info_.joints[i].parameters.find("reverse") != info_.joints[i].parameters.end()) {
       auto reverse_str = info_.joints[i].parameters.at("reverse");
+      std::transform(
+        reverse_str.begin(), reverse_str.end(), reverse_str.begin(),
+        [](unsigned char c) { return std::tolower(c); });
       joints_[i].reverse = reverse_str == "true" || reverse_str == "1";
     }
     RCLCPP_INFO(rclcpp::get_logger(kDynamixelHardware), "joint_id %d: %d", i, joint_ids_[i]);
@@ -151,8 +154,11 @@ CallbackReturn DynamixelHardware::on_init(const hardware_interface::HardwareInfo
   }
 
   if (info_.hardware_parameters.find("extended_mode") != info_.hardware_parameters.end()) {
-    is_extended_mode_ = info_.hardware_parameters.at("extended_mode") == "true" ||
-                        info_.hardware_parameters.at("extended_mode") == "1";
+    auto extended_mode_str = info_.hardware_parameters.at("extended_mode");
+    std::transform(
+      extended_mode_str.begin(), extended_mode_str.end(), extended_mode_str.begin(),
+      [](unsigned char c) { return std::tolower(c); });
+    is_extended_mode_ = extended_mode_str == "true" || extended_mode_str == "1";
   }
   enable_torque(false);
   set_control_mode(is_extended_mode_ ? ControlMode::ExtendedPosition : ControlMode::Position, true);

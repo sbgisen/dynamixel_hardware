@@ -349,10 +349,10 @@ return_type DynamixelHardware::read(
     joints_[i].state.position =
       dynamixel_workbench_.convertValue2Radian(ids[i], positions[i]) / joints_[i].mechanical_reduction * sign +
       joints_[i].rising_offset;
-    joints_[i].state.velocity =
-      dynamixel_workbench_.convertValue2Velocity(ids[i], velocities[i]) / joints_[i].mechanical_reduction;
-    joints_[i].state.effort =
-      dynamixel_workbench_.convertValue2Current(currents[i]) * joints_[i].mechanical_reduction;
+    joints_[i].state.velocity = dynamixel_workbench_.convertValue2Velocity(ids[i], velocities[i]) /
+                                joints_[i].mechanical_reduction * sign;
+    joints_[i].state.effort = dynamixel_workbench_.convertValue2Current(currents[i]) *
+                              joints_[i].mechanical_reduction * sign;
   }
 
   return return_type::OK;
@@ -568,7 +568,7 @@ CallbackReturn DynamixelHardware::set_joint_positions()
     auto sign = joints_[i].reverse ? -1.0 : 1.0;
     commands[i] = dynamixel_workbench_.convertRadian2Value(
       ids[i], static_cast<float>(
-                (joints_[i].command.position - joints_[i].rising_offset) * joints_[i].mechanical_reduction) * sign);
+                (joints_[i].command.position - joints_[i].rising_offset) * joints_[i].mechanical_reduction * sign));
   }
   if (!dynamixel_workbench_.syncWrite(
       kGoalPositionIndex, ids.data(), ids.size(), commands.data(), 1, &log))
@@ -587,8 +587,9 @@ CallbackReturn DynamixelHardware::set_joint_velocities()
   std::copy(joint_ids_.begin(), joint_ids_.end(), ids.begin());
   for (uint i = 0; i < ids.size(); i++) {
     joints_[i].prev_command.velocity = joints_[i].command.velocity;
+    auto sign = joints_[i].reverse ? -1.0 : 1.0;
     commands[i] = dynamixel_workbench_.convertVelocity2Value(
-      ids[i], static_cast<float>(joints_[i].command.velocity * joints_[i].mechanical_reduction));
+      ids[i], static_cast<float>(joints_[i].command.velocity * joints_[i].mechanical_reduction * sign));
   }
   if (!dynamixel_workbench_.syncWrite(
       kGoalVelocityIndex, ids.data(), ids.size(), commands.data(), 1, &log))

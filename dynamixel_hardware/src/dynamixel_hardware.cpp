@@ -83,6 +83,10 @@ CallbackReturn DynamixelHardware::on_init(const hardware_interface::HardwareInfo
         break;
       }
     }
+    if (info_.joints[i].parameters.find("reverse") != info_.joints[i].parameters.end()) {
+      auto reverse_str = info_.joints[i].parameters.at("reverse");
+      joints_[i].reverse = reverse_str == "true" || reverse_str == "1";
+    }
     RCLCPP_INFO(rclcpp::get_logger(kDynamixelHardware), "joint_id %d: %d", i, joint_ids_[i]);
   }
 
@@ -335,8 +339,9 @@ return_type DynamixelHardware::read(
   }
 
   for (uint i = 0; i < ids.size(); i++) {
+    auto sign = joints_[i].reverse ? -1.0 : 1.0;
     joints_[i].state.position =
-      dynamixel_workbench_.convertValue2Radian(ids[i], positions[i]) / joints_[i].mechanical_reduction +
+      dynamixel_workbench_.convertValue2Radian(ids[i], positions[i]) / joints_[i].mechanical_reduction * sign +
       joints_[i].rising_offset;
     joints_[i].state.velocity =
       dynamixel_workbench_.convertValue2Velocity(ids[i], velocities[i]) / joints_[i].mechanical_reduction;
@@ -554,9 +559,10 @@ CallbackReturn DynamixelHardware::set_joint_positions()
   std::copy(joint_ids_.begin(), joint_ids_.end(), ids.begin());
   for (uint i = 0; i < ids.size(); i++) {
     joints_[i].prev_command.position = joints_[i].command.position;
+    auto sign = joints_[i].reverse ? -1.0 : 1.0;
     commands[i] = dynamixel_workbench_.convertRadian2Value(
       ids[i], static_cast<float>(
-                (joints_[i].command.position - joints_[i].rising_offset) * joints_[i].mechanical_reduction));
+                (joints_[i].command.position - joints_[i].rising_offset) * joints_[i].mechanical_reduction) * sign);
   }
   if (!dynamixel_workbench_.syncWrite(
       kGoalPositionIndex, ids.data(), ids.size(), commands.data(), 1, &log))

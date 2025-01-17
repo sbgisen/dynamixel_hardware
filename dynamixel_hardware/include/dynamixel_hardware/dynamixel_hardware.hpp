@@ -45,6 +45,9 @@ struct Joint
   JointValue state{};
   JointValue command{};
   JointValue prev_command{};
+  double mechanical_reduction{1.0};
+  double rising_offset{0.0};
+  bool reverse{false};
 };
 
 enum class ControlMode
@@ -104,6 +107,7 @@ private:
   ControlMode control_mode_{ControlMode::Position};
   bool mode_changed_{false};
   bool use_dummy_{false};
+  bool is_extended_mode_{false};
 };
 }  // namespace dynamixel_hardware
 

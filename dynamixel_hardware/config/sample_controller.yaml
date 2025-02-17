@@ -1,0 +1,28 @@
+/**:
+  controller_manager:
+    ros__parameters:
+      update_rate: 50 # Hz
+      use_sim_time: true
+      joint_state_broadcaster:
+        type: joint_state_broadcaster/JointStateBroadcaster
+      head_trajectory_controller:
+        type: joint_trajectory_controller/JointTrajectoryController
+
+  joint_state_broadcaster:
+    ros__parameters:
+      publish_rate: 50
+
+  head_trajectory_controller:
+    ros__parameters:
+      action_monitor_rate: 10.0
+      command_interfaces:
+        - position
+      state_interfaces:
+        - position
+        - velocity
+      constraints:
+        goal_time: 0.5
+        stopped_velocity_tolerance: 0.0
+      allow_nonzero_velocity_at_trajectory_end: false
+      joints:
+        - head_pan_joint
